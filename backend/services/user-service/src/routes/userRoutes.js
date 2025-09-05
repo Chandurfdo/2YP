@@ -23,10 +23,10 @@ router.get('/',getAdmins);
 router.get('/:id',getAdminById);
 
 
-/*
+
 //POST create a new user
 router.post('/',createAdmin);
-*/
+
 
 
 // pUT update user
@@ -34,6 +34,7 @@ router.put('/:id',updateAdmin);
 
 //Delete a user
 router.delete('/:id',deleteAdmin);
+
 
 
 module.exports = router;
