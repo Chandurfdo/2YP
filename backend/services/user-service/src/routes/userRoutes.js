@@ -23,10 +23,10 @@ router.get('/',getAdmins);
 router.get('/:id',getAdminById);
 
 
-
+/*
 //POST create a new user
 router.post('/',createAdmin);
-
+*/
 
 
 // pUT update user
