@@ -11,14 +11,14 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-const boothRoutes = require('./routes/boothRoutes');
-app.use('/booths', boothRoutes);
+const boothRoutes = require('./routes/buildingRoutes');
+app.use('/buildings', boothRoutes);
 
 
 // Error handling middleware - add this after routes
 app.use((req, res, next) => {
     res.status(404).json({
-        message: `Booth ${req.url} not found`
+        message: `building ${req.url} not found`
     });
 });
 
@@ -32,11 +32,11 @@ app.use((err, req, res, next) => {
 
 // Root route
 app.get('/', (req, res) => {
-    res.send('Booth Service is running(Root Route)');
+    res.send('Building Service is running(Root Route)');
 });
 
 
 
 app.listen(PORT, () => {
-    console.log(`Booth Service running on port ${PORT}`);
+    console.log(`Building Service running on port ${PORT}`);
 });
