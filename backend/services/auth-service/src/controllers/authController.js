@@ -2,169 +2,85 @@
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('../../../../db/db'); // PostgreSQL connection pool
+const pool = require('../../../../db/db.js'); // PostgreSQL connection pool
 
 // ======================
-// REGISTER (Admin)
+// REGISTER (Organizer)
 // ======================
 const register = async (req, res) => {
     try {
-        const { username, password, fname, lname, contact_number, email } = req.body;
+        const { organizer_name, Fname, Lname, email, contact_no, password } = req.body;
 
-        if (!username || !password) {
-            return res.status(400).json({ message: "Username and Password are required" });
+        if (!Fname || !Lname || !email || !password) {
+            return res.status(400).json({ message: "Fname, Lname, Email (username) and Password are required" });
         }
 
-        // Check if username exists
-        const userCheck = await pool.query('SELECT * FROM admin WHERE username = $1', [username]);
-        if (userCheck.rows.length > 0) {
-            return res.status(400).json({ message: "Username already exists" });
+        // Check if email (username) already exists
+        const existingUser = await pool.query('SELECT * FROM Organizer WHERE email = $1', [email]);
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({ message: "Email (username) already registered" });
         }
 
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const password_hash = await bcrypt.hash(password, 10);
 
-        // Generate a random ID or use uuid in DB
-        const adminId = `admin_${Date.now()}`;
-
-        // Insert into DB
-        const newAdmin = await pool.query(
-            `INSERT INTO admin (admin_id, username, password, fname, lname, contact_number, email)
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING admin_id, username, fname, lname, email`,
-            [adminId, username, hashedPassword, fname || null, lname || null, contact_number || null, email || null]
+        // Insert new organizer
+        const result = await pool.query(
+            `INSERT INTO Organizer (organizer_name, Fname, Lname, email, contact_no, password_hash)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING organizer_ID, organizer_name, Fname, Lname, email AS username, contact_no`,
+            [organizer_name || null, Fname, Lname, email, contact_no || null, password_hash]
         );
 
-        res.status(201).json({
-            message: "Admin registered successfully",
-            admin: newAdmin.rows[0]
+        res.status(201).json({ 
+            message: "Organizer registered successfully",
+            organizer: result.rows[0]
         });
 
-    } catch (error) {
-        console.error("Register Error:", error.message);
-        res.status(500).json({ message: "Internal server error" });
+    } catch (err) {
+        console.error("Register Error:", err.message);
+        res.status(500).json({ message: "Internal server error", error: err.message });
     }
 };
 
 // ======================
-// LOGIN (Admin)
+// LOGIN (Organizer)
 // ======================
 const login = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!username || !password) {
-            return res.status(400).json({ message: "Username and Password are required" });
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email (username) and Password are required" });
         }
 
-        // Find user in DB
-        const userResult = await pool.query('SELECT * FROM admin WHERE username = $1', [username]);
+        // Find organizer
+        const userResult = await pool.query('SELECT * FROM Organizer WHERE email = $1', [email]);
         if (userResult.rows.length === 0) {
-            return res.status(401).json({ message: "Invalid username" });
+            return res.status(401).json({ message: "Invalid email (username) or password" });
         }
 
         const user = userResult.rows[0];
 
         // Compare password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await bcrypt.compare(password, user.password_hash);
         if (!isPasswordValid) {
-            return res.status(401).json({ message: "Invalid password" });
+            return res.status(401).json({ message: "Invalid email (username) or password" });
         }
 
         // Generate JWT
         const token = jwt.sign(
-            { id: user.admin_id, username: user.username },
+            { id: user.organizer_ID, username: user.email }, // use email as username
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 
         res.json({ message: "Login successful", token });
 
-    } catch (error) {
-        console.error("Login Error:", error.message);
-        res.status(500).json({ message: "Internal server error" });
+    } catch (err) {
+        console.error("Login Error:", err.message);
+        res.status(500).json({ message: "Internal server error", error: err.message });
     }
 };
 
-// ======================
-// GET ALL ADMINS (for testing)
-// ======================
-const getAllAdmins = async (req, res) => {
-    try {
-        const result = await pool.query('SELECT admin_id, username, fname, lname, email FROM admin');
-        res.json(result.rows);
-    } catch (error) {
-        console.error("Get Admins Error:", error.message);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-module.exports = { register, login, getAllAdmins };
-
-
-/*
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-
-// Dummy user store (replace with DB later)
-const users = [];
-
-
-const register = async (req,res) =>{
-
-    const {username,password} = req.body;
-
-    if(!username || !password){
-        return res.status(400).json({message:"Username and Password are required"});
-    }
-
-    //Check is a user exists
-    const existinguser = users.find(user => user.username === username);
-    if(existinguser){
-        return res.status(400).json({message:"The Username exists"});
-    }
-
-    //Hash pasword
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = {
-        id:users.length+1,
-        username,
-        password:hashedPassword
-    };
-
-    users.push(newUser);
-
-    res.status(201).json({ message: 'User registered successfully', user: { username } });
-};
-
-const login = async (req, res) => {
-    const { username, password } = req.body;
-
-    const user = users.find(user => user.username === username);
-    if (!user) {
-        return res.status(401).json({ message: 'Invalid credentials ( invalid username )' });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-        return res.status(401).json({ message: 'Invalid credentials ( invalid password )' });
-    }
-
-    // Generate JWT
-    const token = jwt.sign(
-        { id: user.id, username: user.username },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-    );
-    res.json({ message: 'Login successful', token });
-};
-
-// GET ALL REGISTERED USERS (with hashed passwords)
-const getAllRegisteredUsers = (req, res) => {
-    res.json(users);
-};
-
-module.exports = { register, login,getAllRegisteredUsers };
-
-*/
-
+module.exports = { register, login };

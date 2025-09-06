@@ -9,7 +9,6 @@ const router = express.Router();
 const {
     getOrganizers,
     getOrganizerById,
-    createOrganizer,
     updateOrganizer,
     deleteOrganizer
 } = require('../controllers/orgController');
@@ -25,8 +24,6 @@ router.get('/:id',getOrganizerById);
 
 
 
-//POST create a new organizer
-router.post('/',createOrganizer);
 
 
 

@@ -28,7 +28,7 @@ const getOrganizerById = async (req, res) => {
     }
 };
 
-
+/*
 
 // Create a new Organizer
 const createOrganizer = async (req, res) => {
@@ -47,6 +47,8 @@ const createOrganizer = async (req, res) => {
         res.status(500).json({ message: 'Database error', error: err.message });
     }
 };
+
+*/
 
 
 
