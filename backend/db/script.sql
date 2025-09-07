@@ -37,8 +37,8 @@ CREATE TABLE Exhibits (
 CREATE TABLE Organizer (
     organizer_ID SERIAL PRIMARY KEY,
     organizer_name VARCHAR(100),
-    Fname VARCHAR(100) NOT NULL,
-    Lname VARCHAR(100) NOT NULL,
+    fname VARCHAR(100) NOT NULL,
+    lname VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     contact_no VARCHAR(20),
     password_hash VARCHAR(255) NOT NULL
