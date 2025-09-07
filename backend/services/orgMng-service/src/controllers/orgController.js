@@ -4,7 +4,7 @@ const pool = require('../../../../db/db.js');
 // Get all organizers
 const getOrganizers = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM Organizer ORDER BY organizer_ID');
+        const result = await pool.query('SELECT organizer_ID, organizer_name, Fname, Lname, email, contact_no FROM Organizer ORDER BY organizer_ID');
         res.json(result.rows);
     } catch (err) {
         console.error('Error fetching Organizers:', err.message);
@@ -16,7 +16,7 @@ const getOrganizers = async (req, res) => {
 const getOrganizerById = async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pool.query('SELECT * FROM Organizer WHERE organizer_ID = $1', [id]);
+        const result = await pool.query('SELECT organizer_ID, organizer_name, Fname, Lname, email, contact_no FROM Organizer WHERE organizer_ID = $1', [id]);
         if (result.rows.length > 0) {
             res.json(result.rows[0]);
         } else {
